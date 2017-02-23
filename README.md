@@ -10,12 +10,14 @@ To build the snap:
 ## Installing
 
 To install your local snap:
+
   `snap install --classic --dangerous <snapfile>`
   
 ## Testing
 
 Try making a new Laravel project:
-  ```laravel new blog
-cd blog
-laravel.php artisan serve```
+  ```
+ laravel new blog
+ cd blog
+ laravel.php artisan serve```
   
