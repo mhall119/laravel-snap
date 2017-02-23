@@ -1,0 +1,63 @@
+name: laravel
+version: '1.3.5'
+summary: Laravel PHP framework
+description: |
+  Command-line tools for Laravel framework. Allows you to easily build
+  and test web applications.
+
+grade: stable
+confinement: classic
+
+apps:
+  laravel:
+    command: laravel.env $SNAP/usr/bin/php $SNAP/vendor/bin/laravel
+  composer:
+    command: laravel.env $SNAP/usr/bin/php $SNAP/usr/bin/composer
+    aliases: [composer]
+  php:
+    command: laravel.env $SNAP/usr/bin/php
+    aliases: [php, php7.0]
+
+parts:
+  # Install Composer and PHP from Ubuntu archive packages
+  composer:
+    plugin: nil
+    stage-packages:
+      - php7.0-cli
+      - php7.0-zip
+      - php7.0-mbstring
+      - php7.0-xml
+      - composer
+
+  # Create php.ini for use in installing laravel and running it
+  # Should point to snap-specific directories for extensions and configs
+  configs:
+    plugin: dump
+    install: |
+      cd $SNAPCRAFT_STAGE;
+      cp $SNAPCRAFT_STAGE/usr/lib/php/7.0/php.ini-production.cli $SNAPCRAFT_STAGE/laravel.php.ini
+      echo "extension_dir = /snap/laravel/current/usr/lib/php/20151012" >> $SNAPCRAFT_STAGE/laravel.php.ini
+      echo "include_path = .:/snap/laravel/current/usr/share/php" >> $SNAPCRAFT_STAGE/laravel.php.ini
+      ls $SNAPCRAFT_STAGE/usr/lib/php/20151012 |grep -v wddx |grep -v opcache |xargs -I{} echo "extension = {}" >> $SNAPCRAFT_STAGE/laravel.php.ini
+      
+      cp $SNAPCRAFT_STAGE/usr/lib/php/7.0/php.ini-production.cli $SNAPCRAFT_STAGE/snapcraft.php.ini
+      echo "extension_dir = $SNAPCRAFT_STAGE/usr/lib/php/20151012" >> $SNAPCRAFT_STAGE/snapcraft.php.ini
+      echo "include_path = .:$SNAPCRAFT_STAGE/usr/share/php" >> $SNAPCRAFT_STAGE/snapcraft.php.ini
+      ls $SNAPCRAFT_STAGE/usr/lib/php/20151012 |grep -v wddx |grep -v opcache |xargs -I{} echo "extension = {}" >> $SNAPCRAFT_STAGE/snapcraft.php.ini
+      
+      ln -s php7.0 usr/bin/php
+    after: [composer]
+    prime:
+      - laravel.env
+      - usr/bin/php
+      - laravel.php.ini
+      - -snapcraft.php.ini
+
+  # Calls composer to install Laravel from laravel/installer
+  laravel:
+    plugin: nil
+    install: |
+      cd $SNAPCRAFT_PART_INSTALL;
+      # PHPRC=$SNAPCRAFT_STAGE/snapcraft.php.ini $SNAPCRAFT_STAGE/usr/bin/php7.0 -i;
+      PHPRC=$SNAPCRAFT_STAGE/snapcraft.php.ini $SNAPCRAFT_STAGE/usr/bin/php7.0 $SNAPCRAFT_STAGE/usr/bin/composer require "laravel/installer"
+    after: [configs]
