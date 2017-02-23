@@ -19,5 +19,6 @@ Try making a new Laravel project:
   ```
  laravel new blog
  cd blog
- laravel.php artisan serve```
+ laravel.php artisan serve
+ ```
   
